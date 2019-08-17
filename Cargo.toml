@@ -1,0 +1,10 @@
+[package]
+name = "randword-bot-rs"
+version = "0.1.0"
+authors = ["Thomas Lacroix <toto.rigolo@free.fr>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+env_logger = "0.6.2"
+serenity = "0.6"
