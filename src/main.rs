@@ -22,7 +22,11 @@ use serenity::{
         StandardFramework,
         standard::macros::group,
     },
-    model::{event::ResumedEvent, gateway::Ready},
+    model::{
+        event::ResumedEvent,
+        gateway::Ready,
+        channel::Reaction,
+    },
     prelude::*,
 };
 use log::*;
@@ -50,11 +54,24 @@ struct Handler;
 
 impl EventHandler for Handler {
     fn ready(&self, _: Context, ready: Ready) {
-        info!("Connected as {}", ready.user.name);
+        info!("Connected as '{}'", ready.user.name);
     }
 
     fn resume(&self, _: Context, _: ResumedEvent) {
         info!("Resumed");
+    }
+
+    fn reaction_add(&self, ctx: Context, reaction: Reaction) {
+        let mut data = ctx.data.write();
+        if let Some(game_mgr) = data.get_mut::<GameStatesContainer>() {
+            game_mgr.reaction_add(reaction);
+        } else {
+            error!("Failed to fetch game_mgr.");
+        }
+    }
+
+    fn reaction_remove(&self, _ctx: Context, _removed_reaction: Reaction) {
+
     }
 }
 
@@ -70,7 +87,7 @@ group!({
 		prefix: "game",
         description: "Game related commands.",
 	},
-    commands: [start]
+    commands: [status, start]
 });
 
 fn main() {
