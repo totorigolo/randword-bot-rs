@@ -1,11 +1,8 @@
-use log::*;
-use serenity::prelude::*;
-use serenity::model::prelude::*;
-use serenity::framework::standard::{
-    Args, CommandResult,
-    macros::command,
-};
 use crate::GameStatesContainer;
+use log::*;
+use serenity::framework::standard::{macros::command, Args, CommandResult};
+use serenity::model::prelude::*;
+use serenity::prelude::*;
 use serenity::utils::MessageBuilder;
 
 #[command]
@@ -40,9 +37,7 @@ pub fn start(ctx: &mut Context, msg: &Message, _args: Args) -> CommandResult {
                     .push("You can remove the emoji if you change your mind.")
                     .build();
 
-                if let Ok(reply_msg) = msg
-                    .channel_id
-                    .say(&ctx.http, reply) {
+                if let Ok(reply_msg) = msg.channel_id.say(&ctx.http, reply) {
                     game_mgr.subscribe(reply_msg.id, msg.channel_id);
                 }
             }
@@ -52,8 +47,9 @@ pub fn start(ctx: &mut Context, msg: &Message, _args: Args) -> CommandResult {
             }
         }
     } else {
-        let _ = msg.channel_id.say(&ctx.http,
-            "Error: Failed to fetch game data.");
+        let _ = msg
+            .channel_id
+            .say(&ctx.http, "Error: Failed to fetch game data.");
         error!("Failed to fetch game_mgr.");
         let _ = msg.react(&ctx, ":skull:");
     }

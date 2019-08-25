@@ -1,10 +1,10 @@
 use log::*;
-use std::fmt::Display;
-use std::collections::{HashMap, HashSet};
-use serenity::prelude::*;
-use serenity::model::id::{ChannelId, UserId, MessageId};
 use serenity::model::channel::{Reaction, ReactionType};
+use serenity::model::id::{ChannelId, MessageId, UserId};
+use serenity::prelude::*;
 use serenity::utils::MessageBuilder;
+use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
 
 pub struct GameStatesManager {
     states: HashMap<ChannelId, GameState>,
@@ -29,21 +29,16 @@ impl GameStatesManager {
             react_to_join_ids: Default::default(),
         }
     }
-    
+
     pub fn status_in(&self, ctx: &Context, channel_id: ChannelId) -> impl Display {
-        let state = self
-            .states
-            .get(&channel_id)
-            .unwrap_or(&GameState::None);
+        let state = self.states.get(&channel_id).unwrap_or(&GameState::None);
         match state {
-            GameState::None => {
-                MessageBuilder::new()
-                    .push("No game is currently ongoing. ")
-                    .push("You can start one with ")
-                    .push_mono("!game start")
-                    .push(".")
-                    .build()
-            }
+            GameState::None => MessageBuilder::new()
+                .push("No game is currently ongoing. ")
+                .push("You can start one with ")
+                .push_mono("!game start")
+                .push(".")
+                .build(),
             GameState::WaitingForPlayers { players, .. } => {
                 let playing = if !players.is_empty() {
                     let names = players
@@ -70,22 +65,17 @@ impl GameStatesManager {
                     .push(playing)
                     .build()
             }
-            GameState::WaitingForVotes { .. } => {
-                MessageBuilder::new()
-                    .push("A game is ongoing, and I am waiting for ")
-                    .push("your votes by direct messages. ")
-                    .push("To vote, follow the instructions ")
-                    .push("I sent you by DM.")
-                    .build()
-            }
+            GameState::WaitingForVotes { .. } => MessageBuilder::new()
+                .push("A game is ongoing, and I am waiting for ")
+                .push("your votes by direct messages. ")
+                .push("To vote, follow the instructions ")
+                .push("I sent you by DM.")
+                .build(),
         }
     }
 
     pub fn start_in(&mut self, channel_id: ChannelId) -> Result<(), impl Display> {
-        let prev_state = self
-            .states
-            .remove(&channel_id)
-            .unwrap_or(GameState::None);
+        let prev_state = self.states.remove(&channel_id).unwrap_or(GameState::None);
         match prev_state {
             GameState::None => {
                 let state = GameState::WaitingForPlayers {
@@ -94,13 +84,11 @@ impl GameStatesManager {
                 self.states.insert(channel_id, state);
                 Ok(())
             }
-            _ => {
-                Err(MessageBuilder::new()
-                    .push("A game is already ongoing, you must ")
-                    .push_mono("!game stop")
-                    .push(" it first.")
-                    .build())
-            }
+            _ => Err(MessageBuilder::new()
+                .push("A game is already ongoing, you must ")
+                .push_mono("!game stop")
+                .push(" it first.")
+                .build()),
         }
     }
 
@@ -110,27 +98,21 @@ impl GameStatesManager {
         // TODO: Filter before calling this fn
         match &reaction.emoji {
             ReactionType::Unicode(s) if s == ":+1:" => {}
-            _ => return
+            _ => return,
         }
 
         let mut remove_sub = true;
 
-        if let Some(channel_id) = self
-                .react_to_join_ids
-                .get(&reaction.message_id) {
-            self
-                .states
-                .get_mut(&channel_id)
-                .map(|state| match state {
-                    GameState::WaitingForPlayers { players, .. } => {
-                        debug!("Adding {} to game in {}.",
-                            reaction.user_id, channel_id);
+        if let Some(channel_id) = self.react_to_join_ids.get(&reaction.message_id) {
+            self.states.get_mut(&channel_id).map(|state| match state {
+                GameState::WaitingForPlayers { players, .. } => {
+                    debug!("Adding {} to game in {}.", reaction.user_id, channel_id);
 
-                        players.insert(reaction.user_id);
-                        remove_sub = false;
-                    }
-                    _ => {}
-                });
+                    players.insert(reaction.user_id);
+                    remove_sub = false;
+                }
+                _ => {}
+            });
         }
 
         if remove_sub {
@@ -139,8 +121,11 @@ impl GameStatesManager {
     }
 
     pub fn subscribe(&mut self, message_id: MessageId, channel_id: ChannelId) {
-        trace!("Subscribed to reactions to {} for channel {}.",
-               message_id, channel_id);
+        trace!(
+            "Subscribed to reactions to {} for channel {}.",
+            message_id,
+            channel_id
+        );
         self.react_to_join_ids.insert(message_id, channel_id);
     }
 
@@ -148,4 +133,3 @@ impl GameStatesManager {
         self.react_to_join_ids.remove(&message_id);
     }
 }
-

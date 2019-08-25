@@ -11,31 +11,16 @@
 mod commands;
 mod game_state;
 
-use std::{
-    collections::HashSet,
-    env,
-    sync::Arc,
-};
+use log::*;
 use serenity::{
     client::bridge::gateway::ShardManager,
-    framework::{
-        StandardFramework,
-        standard::macros::group,
-    },
-    model::{
-        event::ResumedEvent,
-        gateway::Ready,
-        channel::Reaction,
-    },
+    framework::{standard::macros::group, StandardFramework},
+    model::{channel::Reaction, event::ResumedEvent, gateway::Ready},
     prelude::*,
 };
-use log::*;
+use std::{collections::HashSet, env, sync::Arc};
 
-use commands::{
-    meta::*,
-    owner::*,
-    game::*,
-};
+use commands::{game::*, meta::*, owner::*};
 use game_state::*;
 
 struct ShardManagerContainer;
@@ -47,7 +32,7 @@ impl TypeMapKey for ShardManagerContainer {
 pub struct GameStatesContainer;
 
 impl TypeMapKey for GameStatesContainer {
-	type Value = GameStatesManager;
+    type Value = GameStatesManager;
 }
 
 struct Handler;
@@ -70,9 +55,7 @@ impl EventHandler for Handler {
         }
     }
 
-    fn reaction_remove(&self, _ctx: Context, _removed_reaction: Reaction) {
-
-    }
+    fn reaction_remove(&self, _ctx: Context, _removed_reaction: Reaction) {}
 }
 
 group!({
@@ -101,8 +84,7 @@ fn main() {
     // `RUST_LOG` to debug`.
     env_logger::init();
 
-    let token = env::var("DISCORD_TOKEN")
-        .expect("DISCORD_TOKEN env variable not set.");
+    let token = env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN env variable not set.");
 
     let mut client = Client::new(&token, Handler).expect("Err creating client");
 
@@ -111,9 +93,9 @@ fn main() {
 
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
 
-		let mgr = GameStatesManager::new();
-		//data.insert::<GameStatesContainer>(Arc::new(Mutex::new(mgr)));
-		data.insert::<GameStatesContainer>(mgr);
+        let mgr = GameStatesManager::new();
+        //data.insert::<GameStatesContainer>(Arc::new(Mutex::new(mgr)));
+        data.insert::<GameStatesContainer>(mgr);
     }
 
     let owners = match client.cache_and_http.http.get_current_application_info() {
@@ -121,17 +103,17 @@ fn main() {
             let mut set = HashSet::new();
             set.insert(info.owner.id);
             set
-        },
+        }
         Err(why) => panic!("Couldn't get application info: {:?}", why),
     };
 
-    client.with_framework(StandardFramework::new()
-        .configure(|c| c
-            .owners(owners)
-            .prefix("!"))
-        .group(&GENERAL_GROUP)
-        .group(&GAME_GROUP)
-		.help(&HELP));
+    client.with_framework(
+        StandardFramework::new()
+            .configure(|c| c.owners(owners).prefix("!"))
+            .group(&GENERAL_GROUP)
+            .group(&GAME_GROUP)
+            .help(&HELP),
+    );
 
     if let Err(why) = client.start() {
         error!("Client error: {:?}", why);

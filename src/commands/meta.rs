@@ -1,11 +1,12 @@
-use std::collections::HashSet;
-use serenity::prelude::*;
-use serenity::model::prelude::*;
-use serenity::framework::standard::{
-    CommandResult, Args, CommandGroup, HelpOptions, help_commands,
-    macros::{command, help},
-};
 use log::*;
+use serenity::framework::standard::{
+    help_commands,
+    macros::{command, help},
+    Args, CommandGroup, CommandResult, HelpOptions,
+};
+use serenity::model::prelude::*;
+use serenity::prelude::*;
+use std::collections::HashSet;
 
 #[command]
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
@@ -22,8 +23,7 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
 #[help]
 // This replaces the information that a user can pass
 // a command-name as argument to gain specific information about it.
-#[individual_command_tip =
-"If you want more information about a specific command, just pass the command as argument."]
+#[individual_command_tip = "If you want more information about a specific command, just pass the command as argument."]
 // Some arguments require a `{}` in order to replace it with contextual information.
 // In this case our `{}` refers to a command's name.
 #[command_not_found_text = "Could not find: `{}`."]
@@ -55,8 +55,7 @@ fn help(
     args: Args,
     help_options: &'static HelpOptions,
     groups: &[&'static CommandGroup],
-    owners: HashSet<UserId>
+    owners: HashSet<UserId>,
 ) -> CommandResult {
     help_commands::with_embeds(context, msg, args, help_options, groups, owners)
 }
-
